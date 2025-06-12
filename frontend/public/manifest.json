@@ -1,0 +1,31 @@
+{
+  "short_name": "EMD Assistant",
+  "name": "EMD Assistant",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "character.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "character.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#006C70",
+  "background_color": "#ffffff",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities"],
+  "description": "An AI-powered medical history interviewer, for demo purposes"
+}

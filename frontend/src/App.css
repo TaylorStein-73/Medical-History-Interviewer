@@ -1,0 +1,636 @@
+/* Theme Variables */
+:root {
+  --primary: #006C70;
+  --accent: #00C4CC;
+  --charcoal: #333;
+  --bot-bg: #e6f4f1;
+  --border: #d4d4d4;
+}
+
+/* Global Layout */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--primary);
+}
+
+.AppContainer {
+  max-width: 794px;
+  margin: 0 auto;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  padding: 0 12px;
+  padding-left: calc(72px + 12px); /* Account for left nav */
+}
+
+.MainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Navigation */
+.LeftNav {
+  width: 72px;
+  background: White;
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  height: 100vh;
+}
+
+.NavLogo {
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.NavLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.NavButton {
+  width: 100%;
+  height: auto;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #666;
+  transition: all 0.2s ease;
+  margin: 0 auto;
+  padding: 8px 4px;
+}
+
+.NavButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+}
+
+.NavButton svg {
+  width: 24px;
+  height: 24px;
+}
+
+.NavButtonText {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+  font-weight: 500;
+  margin-top: 2px;
+  color: inherit;
+}
+
+/* Chat Area */
+.ChatBody {
+  padding: 24px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 80px;
+  padding-bottom: 24px;
+  border-radius: 18px;
+}
+
+.ChatBubble {
+  border-radius: 20px;
+  padding: 14px 18px;
+  font-size: 16px;
+  margin-bottom: 6px;
+  word-break: break-word;
+  font-weight: 400;
+  box-shadow: 0 2px 8px 0 rgba(0,108,112,0.08);
+}
+
+.ChatBubble p {
+  margin: 0 0 10px 0;
+  line-height: 1.7;
+}
+
+.ChatBubble ul,
+.ChatBubble ol {
+  margin: 0 0 10px 18px;
+  padding: 0 0 0 16px;
+}
+
+.ChatBubble li {
+  margin: 0 0 2px 0;
+}
+
+.ChatBubbleUser {
+  align-self: flex-end;
+  background: var(--accent);
+  color: white;
+  border-top-right-radius: 6px;
+}
+
+.ChatBubbleBot {
+  align-self: flex-start;
+  background: var(--bot-bg);
+  color: var(--charcoal);
+  border-top-left-radius: 6px;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.ChatForm {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+}
+
+.ChatInput {
+  flex: 1;
+  font-size: 17px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: white;
+  color: var(--charcoal);
+  resize: none;
+  transition: all 0.2s ease;
+}
+
+.ChatInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 108, 112, 0.1);
+  outline: none;
+}
+
+.ChatSendButton {
+  padding: 0 28px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: white;
+  font-weight: 600;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 100%;
+}
+
+.ChatSendButton:hover:not(:disabled) {
+  background: var(--accent);
+}
+
+.ChatSendButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.BrandAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ffffff;
+  box-shadow: 0 1px 3px 0 rgba(0,108,112,0.10);
+  margin-right: 12px;
+  padding: 12px;
+  border: .5px solid var(--border);
+  position: relative;
+  top: 12px;
+  z-index: 10;
+}
+
+/* Modal */
+.Modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.Modal.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.ModalContent {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  transform: translateY(20px);
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.Modal.open .ModalContent {
+  transform: translateY(0);
+}
+
+.ModalCloseButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+.ModalCloseButton:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #333;
+}
+
+.ModalCloseButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ModalTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--charcoal);
+  margin: 0 0 20px 0;
+}
+
+.ModalActions {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.ModalButton {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ModalButton.primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.ModalButton.primary:hover {
+  background: #005a5e;
+}
+
+.ModalButton.secondary {
+  background: white;
+  color: var(--charcoal);
+  border: 1.5px solid var(--border);
+}
+
+.ModalButton.secondary:hover {
+  background: #f0f0f0;
+}
+
+/* Form Elements */
+.FormGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+}
+
+.FormGroup label {
+  font-weight: 500;
+  color: var(--charcoal);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.PatientContextInput {
+  width: 100%;
+  height: 200px;
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--charcoal);
+  resize: vertical;
+  background: #f8f9fa;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.PatientContextInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+}
+
+.SummaryDisplay {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Empty State */
+.ChatBody.empty {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.EmptyStateContainer {
+  max-width: 600px;
+  text-align: center;
+  margin-bottom: 100px;
+  position: relative;
+  z-index: 2;
+}
+
+.EmptyStateBackground {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -5%);
+  width: 400px;
+  height: 400px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.EmptyStateBackground::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  width: 2500px;
+  height: 1750px;
+  background: #fff2e3;
+  border-radius: 50%;
+  z-index: -1;
+  opacity: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.EmptyStateBackground img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.EmptyStateContainer h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.EmptyStateContainer p {
+  font-size: 18px;
+  color: var(--charcoal);
+  margin: 0 0 32px 0;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.StartInterviewButton {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 24px;
+  box-shadow: 0 4px 12px rgba(0, 108, 112, 0.2);
+}
+
+.StartInterviewButton:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 108, 112, 0.3);
+}
+
+.StartInterviewButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 108, 112, 0.2);
+}
+
+/* Typing Indicator */
+.typing-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+.typing-indicator span {
+  width: 4px;
+  height: 4px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out;
+  opacity: 0.3;
+}
+
+.typing-indicator span:nth-child(1) { animation-delay: 0s; }
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.3;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* Fixed Bottom Section */
+.BottomSection {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(calc(-50% + 36px));
+  width: calc(100% - 24px);
+  max-width: 794px;
+  background: white;
+  border: 1.5px solid var(--border);
+  padding: 0;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .AppContainer {
+    padding: 0px;
+    width: 100%
+  }
+
+  .LeftNav {
+    display: none;
+  }
+
+  .BottomSection {
+    transform: translateX(-50%);
+    bottom: 48px;
+    width: calc(100% - 24px);
+    margin: 0;
+    left: 50%;
+  }
+
+  .ChatBody {
+    padding: 16px;
+    margin-bottom: 116px;
+  }
+
+  .EmptyStateContainer {
+    padding: 0 16px;
+  }
+
+  .EmptyStateContainer h1 {
+    font-size: 24px;
+  }
+}
+
+/* Add these styles after the Modal styles section */
+
+.SystemPromptEditor {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.SystemPromptEditor textarea {
+  width: 100%;
+  height: 600px;
+  max-height: calc(85vh - 160px);
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--charcoal);
+  resize: vertical;
+  background: #f8f9fa;
+  box-sizing: border-box;
+  margin: 0;
+  display: block;
+}
+
+.SystemPromptEditor textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: white;
+}
+
+.AgentSettingsForm {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0 0 20px 0;
+}
+
+.FormGroup .description {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.FormGroup input[type="number"],
+.FormGroup input[type="range"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--charcoal);
+}
+
+.FormGroup input[type="number"] {
+  width: 80px;
+  text-align: center;
+}
+
+.FormGroup input[type="range"] {
+  padding: 0;
+  margin: 8px 0;
+}
+
+.RangeWithValue {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ValueDisplay {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  color: var(--charcoal);
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: 48px;
+  text-align: center;
+}
+
+.ModalActions > div:empty {
+  flex: 1;
+}
