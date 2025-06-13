@@ -22,7 +22,7 @@ const structuredParser = StructuredOutputParser.fromZodSchema(extractionSchema);
 const createOutputFixingParser = () => {
   return OutputFixingParser.fromLLM(
     new ChatOpenAI({ 
-      model: "gpt-3.5-turbo", 
+      model: "gpt-4o-mini", 
       temperature: 0,
       openAIApiKey: process.env.OPENAI_API_KEY 
     }),
@@ -79,7 +79,7 @@ function cleanLLMResponse(response) {
 // Build the extraction chain for a specific slot
 function buildExtractChain(slotConfig) {
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "extraction"]

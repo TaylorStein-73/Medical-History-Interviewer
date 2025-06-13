@@ -37,7 +37,7 @@ let systemPrompt = fs.readFileSync(path.join(__dirname, 'system_prompt.txt'), 'u
 
 // Initialize OpenAI client for summary generation
 const summaryLLM = new ChatOpenAI({ 
-  model: "gpt-3.5-turbo", 
+  model: "gpt-4o-mini", 
   temperature: 0.3, 
   maxTokens: 1000, 
   openAIApiKey: process.env.OPENAI_API_KEY,

@@ -45,7 +45,7 @@ const validationParser = StructuredOutputParser.fromZodSchema(validationResultSc
 // Advanced validation function
 async function validateExtractedValue(slotName, extractedValue, userResponse, question, contextInfo = {}) {
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0.1,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "validation"]

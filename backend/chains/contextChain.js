@@ -44,7 +44,7 @@ const contextParser = StructuredOutputParser.fromZodSchema(contextResponseSchema
 // Generate context-aware next question
 async function generateContextAwareQuestion(filledSlots, conversationHistory, nextSlot, availableSlots) {
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0.2,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "context-aware"]

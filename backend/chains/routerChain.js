@@ -100,7 +100,7 @@ Extract ALL possible slot values from this response. Be thorough and aggressive 
   const multiExtractParser = StructuredOutputParser.fromZodSchema(multiExtractSchema);
   
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "multi-extraction"]
@@ -181,7 +181,7 @@ Extract ALL possible slot values from this response. Be thorough and aggressive 
 // Main router function
 async function routeUserResponse(currentSlot, userResponse, availableSlots, conversationContext = {}) {
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0.1,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "routing"]
@@ -264,7 +264,7 @@ async function routeUserResponse(currentSlot, userResponse, availableSlots, conv
 // Generate clarification question
 async function generateClarificationQuestion(currentSlot, userResponse, slotConfig) {
   const llm = new ChatOpenAI({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4o-mini",
     temperature: 0.5,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "clarification"]

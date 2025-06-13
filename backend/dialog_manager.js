@@ -10,7 +10,7 @@ const { z } = require('zod');
 class DialogManager {
   constructor() {
     this.llm = new ChatOpenAI({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o-mini",
       temperature: 0.3,
       maxTokens: 1000,
       openAIApiKey: process.env.OPENAI_API_KEY,
