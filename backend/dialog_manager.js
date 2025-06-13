@@ -4,6 +4,8 @@ const { buildExtractChain, preprocessResponse } = require('./chains/extractSlotC
 const { interviewMemory } = require('./memory');
 const { generateEnhancedSummary, generateSimpleSummary } = require('./chains/summaryChain');
 const { routeUserResponse, generateClarificationQuestion } = require('./chains/routerChain');
+const { StructuredOutputParser } = require('langchain/output_parsers');
+const { z } = require('zod');
 
 class DialogManager {
   constructor() {
@@ -91,9 +93,12 @@ class DialogManager {
   getNextQuestion(filledSlots) {
     const nextSlot = getNextUnfilledSlot(filledSlots);
     if (!nextSlot) {
+      // All questions answered – move to review phase instead of immediate completion
+      const reviewMessage = this.generateReviewMessage(filledSlots);
       return {
-        isComplete: true,
-        message: "Thank you for providing all the information. I'll generate a summary for your doctor."
+        isReview: true,
+        filledSlots,
+        message: reviewMessage
       };
     }
 
@@ -103,6 +108,140 @@ class DialogManager {
       slot: nextSlot,
       message: slotConfig.question
     };
+  }
+
+  // Build a human-readable review message summarising collected info
+  generateReviewMessage(filledSlots) {
+    const formatValue = (val) => {
+      if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+      if (Array.isArray(val)) return val.join(', ');
+      return String(val);
+    };
+
+    const makeLabel = (question, slotName) => {
+      let label = question || slotName;
+      // Remove parentheses content and trailing question mark
+      label = label.replace(/\(.*?\)/g, '').trim();
+      if (label.endsWith('?')) label = label.slice(0, -1);
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    };
+
+    const lines = Object.entries(filledSlots).map(([slotName, value]) => {
+      const question = SLOT_SCHEMA.slots[slotName]?.question;
+      const label = makeLabel(question, slotName);
+      return `- **${label}:** ${formatValue(value)}`;
+    });
+
+    return `### Please review your information\n\n${lines.join('\n')}\n\nIf anything looks incorrect or needs to be updated, just tell me (for example, \\"Change my birth year to 1987\\" or \\"I don't have a partner\\").\n\nWhen everything looks good, type **approved** to finalize.`;
+  }
+
+  // Apply corrections (LLM-driven plus regex fallback) provided by the patient
+  async applyCorrections(userResponse, filledSlots) {
+    let updated = { ...filledSlots };
+
+    try {
+      // -------------------
+      // 1. LLM-based parser
+      // -------------------
+      const correctionsSchema = z.object({
+        corrections: z.array(z.object({
+          slotName: z.string(),
+          newValue: z.any()
+        }))
+      });
+
+      const parser = StructuredOutputParser.fromZodSchema(correctionsSchema);
+
+      const slotContext = Object.entries(filledSlots)
+        .map(([name, val]) => `${name}: ${val}`)
+        .join('\n');
+
+      const formatInstr = parser.getFormatInstructions();
+
+      const prompt = `You are updating collected patient information. Here is the current data:\n${slotContext}\n\nPatient says: "${userResponse}"\n\nIdentify any corrections or updates the patient is asking for. Output ONLY JSON according to these instructions:\n${formatInstr}`;
+
+      const llm = this.llm; // reuse instance
+
+      const llmResp = await llm.invoke(prompt);
+      const cleaned = llmResp.content.replace(/```json\n?|\n?```/g, '').trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (err) {
+        parsed = await parser.parse(llmResp.content).catch(() => null);
+      }
+
+      if (parsed && parsed.corrections && Array.isArray(parsed.corrections)) {
+        for (const { slotName, newValue } of parsed.corrections) {
+          if (SLOT_SCHEMA.slots[slotName]) {
+            if (updated[slotName] !== newValue) {
+              updated[slotName] = newValue;
+              await interviewMemory.saveInteraction(`Correction for ${slotName}`, userResponse, newValue, slotName);
+            }
+          }
+        }
+      }
+    } catch (llmErr) {
+      console.warn('LLM correction parsing failed, falling back to regex:', llmErr.message);
+    }
+
+    const lower = userResponse.toLowerCase();
+
+    // Helper to convert yes/ no phrases to boolean if slot seems boolean (starts with has_/is_ or existing value boolean)
+    const assignValue = (slot, val) => {
+      const current = filledSlots[slot];
+      const looksBoolean = typeof current === 'boolean' || /^(has_|is_)/.test(slot);
+      if (looksBoolean) {
+        const v = String(val).toLowerCase();
+        if (/^(yes|true|y|have|with|married)/i.test(v)) { updated[slot] = true; return; }
+        if (/^(no|false|n|single|none|without)/i.test(v)) { updated[slot] = false; return; }
+      }
+      updated[slot] = String(val).trim();
+    };
+
+    // 1. Strict "field: value" or "field = value" pattern
+    for (const slotName of Object.keys(SLOT_SCHEMA.slots)) {
+      const slotPattern = slotName.replace(/_/g, '[ _]');
+      const regex = new RegExp(`${slotPattern}\\s*[:=]\\s*(.+)`, 'i');
+      const match = userResponse.match(regex);
+      if (match && match[1]) {
+        const before = updated[slotName];
+        assignValue(slotName, match[1]);
+        if (before !== updated[slotName]) {
+          await interviewMemory.saveInteraction(`Correction for ${slotName}`, userResponse, updated[slotName], slotName);
+        }
+      }
+    }
+
+    // 2. Generic natural-language patterns per slot (no hard-coded aliases)
+    for (const slotName of Object.keys(SLOT_SCHEMA.slots)) {
+      const words = slotName.replace(/_/g, ' ');
+      // change my <words> to VALUE
+      const regex1 = new RegExp(`(?:change|update|correct|set).{0,40}${words}.{0,20}(?:to|is|=)\\s+(.+)`, 'i');
+      // <words> is VALUE
+      const regex2 = new RegExp(`${words}\\s+(?:is|=)\\s+(.+)`, 'i');
+      let m = userResponse.match(regex1) || userResponse.match(regex2);
+      if (m && m[1]) {
+        const before = updated[slotName];
+        assignValue(slotName, m[1]);
+        if (before !== updated[slotName]) {
+          await interviewMemory.saveInteraction(`Correction for ${slotName}`, userResponse, updated[slotName], slotName);
+        }
+      }
+
+      // Additional generic booleans: "I am <word>" where word matches yes/no patterns
+      if (/\bi am single\b/i.test(lower) && /has_partner/.test(slotName)) {
+        updated[slotName] = false;
+        await interviewMemory.saveInteraction(`Correction for ${slotName}`, userResponse, false, slotName);
+      }
+      if (/\bmarried\b|\bspouse\b|\bhusband\b|\bwife\b/.test(lower) && /has_partner/.test(slotName)) {
+        updated[slotName] = true;
+        await interviewMemory.saveInteraction(`Correction for ${slotName}`, userResponse, true, slotName);
+      }
+    }
+
+    return updated;
   }
 
   // Process multiple slot extractions from router
@@ -198,10 +337,16 @@ class DialogManager {
             } else {
               // No successful extractions, fall back to ask
               await interviewMemory.saveInteraction(question, userResponse, null, currentSlot);
+              const clarificationQuestion = await generateClarificationQuestion(
+                currentSlot,
+                userResponse,
+                slotConfig
+              );
               return {
                 success: false,
-                error: "I couldn't extract clear information from your response. Could you please be more specific?",
-                shouldReprompt: true
+                error: clarificationQuestion,
+                shouldReprompt: true,
+                isClarification: true
               };
             }
 
@@ -237,10 +382,17 @@ class DialogManager {
     if (!extractedValue) {
       await interviewMemory.saveInteraction(question, userResponse, null, currentSlot);
       
+      const clarificationQuestion = await generateClarificationQuestion(
+        currentSlot,
+        userResponse,
+        slotConfig
+      );
+
       return {
         success: false,
-        error: `Could not extract a valid value. ${slotConfig.error || 'Please try again with a clearer response.'}`,
-        shouldReprompt: true
+        error: clarificationQuestion,
+        shouldReprompt: true,
+        isClarification: true
       };
     }
 

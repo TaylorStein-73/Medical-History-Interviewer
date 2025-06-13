@@ -33,6 +33,7 @@ function App() {
   const [interviewState, setInterviewState] = useState({
     isStarted: false,
     isComplete: false,
+    isReview: false,
     currentSlot: null,
     filledSlots: {},
     summary: null,
@@ -152,7 +153,8 @@ function App() {
       setInterviewState(prev => ({
         ...prev,
         isStarted: true,
-        currentSlot: data.slot,
+        isReview: data.isReview || false,
+        currentSlot: data.slot ?? null,
         filledSlots: {}
       }));
 
@@ -190,7 +192,8 @@ function App() {
         body: JSON.stringify({
           currentSlot: interviewState.currentSlot,
           response: userResponse,
-          filledSlots: interviewState.filledSlots
+          filledSlots: interviewState.filledSlots,
+          phase: interviewState.isReview ? 'review' : undefined
         }),
       });
 
@@ -243,29 +246,45 @@ function App() {
             text: data.error || "I didn't understand that response. Could you please try again?"
           }]);
         }
+      } else if (data.isReview) {
+        // Entering or continuing review phase
+        setInterviewState(prev => ({
+          ...prev,
+          isReview: true,
+          filledSlots: data.filledSlots || prev.filledSlots
+        }));
+
+        setChat(prev => [...prev, { from: "bot", text: data.message }]);
       } else if (data.isComplete) {
         // Generate summary
-        const summaryRes = await fetch(`${apiUrl}/api/generate-summary`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filledSlots: data.filledSlots
-          }),
-        });
+        let summaryText = data.summary;
 
-        if (!summaryRes.ok) throw new Error(`HTTP error! status: ${summaryRes.status}`);
-        const summaryData = await summaryRes.json();
+        // If backend didn't include summary, request it
+        if (!summaryText) {
+          const summaryRes = await fetch(`${apiUrl}/api/generate-summary`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filledSlots: data.filledSlots
+            }),
+          });
+
+          if (!summaryRes.ok) throw new Error(`HTTP error! status: ${summaryRes.status}`);
+          const summaryData = await summaryRes.json();
+          summaryText = summaryData.summary;
+        }
 
         setInterviewState(prev => ({
           ...prev,
           isComplete: true,
           filledSlots: data.filledSlots,
-          summary: summaryData.summary
+          summary: summaryText,
+          isReview: false
         }));
 
         setChat(prev => [...prev, {
           from: "bot",
-          text: "Thank you for completing the interview. Here is a summary of your information:\n\n" + summaryData.summary
+          text: "Thank you for completing the interview. Here is a summary of your information:\n\n" + summaryText
         }]);
       } else {
         setInterviewState(prev => ({
@@ -330,7 +349,7 @@ function App() {
         from: "bot",
         text: error.message === "Server error" 
           ? "I'm having technical difficulties. Please try again in a moment."
-          : "I apologize, but there was an error processing your response. Please try again."
+          : error.message || "I couldn't understand your response. Please provide a clearer answer or ask for clarification if needed."
       }]);
     }
     setLoading(false);

@@ -184,8 +184,36 @@ app.get('/api/health', (req, res) => {
 // Start or continue interview
 app.post('/api/interview-next', async (req, res) => {
   try {
-    const { currentSlot, response, filledSlots } = req.body;
-    
+    const { currentSlot, response, filledSlots = {}, phase } = req.body;
+
+    // ---------------------
+    // 1. REVIEW PHASE FLOW
+    // ---------------------
+    if (phase === 'review') {
+      const trimmed = (response || '').trim();
+
+      // If patient typed "approved" -> finalize and return summary
+      if (/^approved$/i.test(trimmed)) {
+        const summary = await dialogManager.generateSummary(filledSlots);
+        return res.json({ isComplete: true, summary });
+      }
+
+      // Otherwise attempt to apply corrections
+      const updatedSlots = await dialogManager.applyCorrections(trimmed, filledSlots);
+
+      // Build new review message
+      const reviewMsg = dialogManager.generateReviewMessage(updatedSlots);
+
+      return res.json({
+        isReview: true,
+        filledSlots: updatedSlots,
+        message: reviewMsg
+      });
+    }
+
+    // ---------------------------
+    // 2. STANDARD INTERVIEW FLOW
+    // ---------------------------
     // If this is the start of the interview
     if (!currentSlot) {
       const nextQuestion = await dialogManager.getNextQuestion({});
@@ -199,7 +227,8 @@ app.post('/api/interview-next', async (req, res) => {
       return res.status(400).json({
         error: result.error,
         shouldReprompt: result.shouldReprompt,
-        isClarification: result.isClarification || false
+        isClarification: result.isClarification || false,
+        isReview: result.isReview || false
       });
     }
 

@@ -265,7 +265,7 @@ async function routeUserResponse(currentSlot, userResponse, availableSlots, conv
 async function generateClarificationQuestion(currentSlot, userResponse, slotConfig) {
   const llm = new ChatOpenAI({
     model: "gpt-3.5-turbo",
-    temperature: 0.3,
+    temperature: 0.5,
     openAIApiKey: process.env.OPENAI_API_KEY,
     tags: ["production", "medical-interview", "clarification"]
   });
